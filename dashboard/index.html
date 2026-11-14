@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — which pre-token protocol is worth farming next</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="pulse" aria-hidden="true"></span><h1>TOKEN RADAR</h1></div>
+  <p class="tag">Every protocol DefiLlama tracks, ranked by what its token launch would be worth — and how to farm each one before it happens.</p>
+  <p class="meta" id="meta">Loading snapshot…</p>
+  <div class="stats" id="stats"></div>
+  <nav class="tabs" aria-label="Views">
+    <button data-tab="board" class="active" type="button">Board</button>
+    <button data-tab="live" type="button">Live tokens</button>
+    <button data-tab="model" type="button">The model</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-board" class="tab active">
+    <div class="controls">
+      <label>Search <input id="q" type="search" placeholder="protocol name or slug" autocomplete="off"></label>
+      <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+      <label>Category <select id="cat"><option value="">All categories</option></select></label>
+      <label>Sort <select id="sort">
+        <option value="implied">Implied value ↓</option>
+        <option value="tvl">TVL ↓</option>
+        <option value="growth">7-day growth ↓</option>
+        <option value="age">Age ↓</option>
+        <option value="name">Name A–Z</option>
+      </select></label>
+      <label class="check"><input id="watchonly" type="checkbox"> Watchlist only</label>
+    </div>
+    <p class="count" id="count"></p>
+    <div class="tablewrap">
+    <table id="board">
+      <thead><tr>
+        <th class="num">#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th>
+        <th class="num">Implied value</th><th>Signals</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    </div>
+    <p class="note">Implied value is this radar's own claim, computed from the snapshot — never a market price. “Records no token” means DefiLlama's record carries none; it is not proof the protocol has none.</p>
+  </section>
+
+  <section id="tab-live" class="tab">
+    <h2>Live tokens — the market's own values</h2>
+    <p>These protocols already trade, so the board does not rank them. Their market-cap-to-TVL ratios are the calibration the model learns from: the median ratio per category sets the multiple every pre-token protocol in that category is valued at.</p>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Protocol</th><th>Category</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">mcap / TVL</th><th class="num">7d</th></tr></thead>
+      <tbody id="live"></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section id="tab-model" class="tab">
+    <h2>The model — radar-2, calibrated on the snapshot itself</h2>
+    <div class="formula">
+      <p><strong>implied = TVL × category multiple × growth × maturity × chain reach</strong></p>
+      <ul>
+        <li><strong>Category multiple</strong> — median market-cap / TVL of the live-token protocols in the same category (3+ peers), else the whole-market median; clamped to 0.05–1.00.</li>
+        <li><strong>Growth</strong> — 1 + clamp(7-day TVL change, −50%, +100%) × 0.6.</li>
+        <li><strong>Maturity</strong> — 0.70 + min(age, 1095 days) / 1095 × 0.30; unknown age counts as 365 days.</li>
+        <li><strong>Chain reach</strong> — 1 + min(chains − 1, 5) × 0.02.</li>
+      </ul>
+      <p>No protocol name is special-cased. The calibration table below is recomputed from whatever snapshot the program is handed, so the radar keeps working on protocols that do not exist yet.</p>
+    </div>
+    <h3>Calibration — market-cap / TVL by category</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Category</th><th class="num">Multiple</th><th class="num">Live peers</th><th>Source</th></tr></thead>
+      <tbody id="calib"></tbody>
+    </table></div>
+    <h3>Sandbox — move the dials, watch the board re-rank</h3>
+    <p>Change a weight and the top 10 re-ranks live, from the same snapshot figures. The board above always shows the published model; this is the reader's what-if.</p>
+    <div class="sandbox">
+      <label>Growth weight <input id="sb-growth" type="range" min="0" max="1.5" step="0.05" value="0.6"> <output id="sb-growth-v">0.60</output></label>
+      <label>Maturity weight <input id="sb-mat" type="range" min="0" max="0.6" step="0.02" value="0.3"> <output id="sb-mat-v">0.30</output></label>
+      <label>Multiple cap <input id="sb-cap" type="range" min="0.2" max="2" step="0.05" value="1"> <output id="sb-cap-v">1.00</output></label>
+      <ol id="sb-top"></ol>
+    </div>
+  </section>
+
+  <section id="detail" class="detail" hidden>
+    <button id="detail-close" type="button">← Back to the board</button>
+    <div id="detail-body"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Snapshot: <span id="src"></span>. Board ranks pre-token protocols only; live-token protocols appear at their market values. A protocol's implied value is the entry's own claim, never make.fun's, and never a prediction that a token will be issued.</p>
+  <p>Method: TVL × category multiple (calibrated from live-token peers in the snapshot) × growth × maturity × chain reach. Farm plans are derived from each protocol's category, chains, TVL and age — never from a hand-kept list of names.</p>
+</footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
